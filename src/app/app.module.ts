@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { Error404Component } from './error-404/error-404.component';
 import { PagesModule } from './pages/pages.module';
 import { AuthModule } from './auth/auth.module';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 
 @NgModule({
@@ -17,7 +18,10 @@ import { AuthModule } from './auth/auth.module';
     BrowserModule,
     AppRoutingModule,
     PagesModule,
-    AuthModule
+    AuthModule,
+  ],
+  providers: [
+    provideCharts(withDefaultRegisterables())
   ],
   bootstrap: [AppComponent]
 })
