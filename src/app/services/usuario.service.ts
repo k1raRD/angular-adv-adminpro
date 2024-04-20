@@ -4,6 +4,7 @@ import { RegisterForm } from '../interfaces/register-form.interface';
 import { environment } from '../../environments/environment';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { Usuario } from '../models/usuario.model';
 
 const baseUrl = environment.base_url;
 
@@ -15,12 +16,21 @@ declare const gapi: any;
 export class UsuarioService {
 
   public auth2: any;
+  public usuario: Usuario;
 
   constructor(private http: HttpClient,
               private router: Router,
               private ngZone: NgZone
   ) { 
     this.googleInit();
+  }
+
+  get token() {
+    return localStorage.getItem('token') || '';
+  }
+
+  get uid() {
+    return this.usuario.uid || '';
   }
 
    googleInit() {
@@ -36,17 +46,17 @@ export class UsuarioService {
   }
 
   validarToken(): Observable<boolean> {
-    const token = localStorage.getItem('token') || '';
-
     return this.http.get(`${baseUrl}/login/renew`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${this.token}`
       } 
     }).pipe(
-      tap((resp: any)=> {
+      map((resp: any)=> {
+        const {email, nombre, google, role, _id, password, img = ''} = resp.usuario;
+        this.usuario = new Usuario(nombre, email, password, role, img, google, _id);
         localStorage.setItem('token', resp.token);
+        return true
       }),
-      map(resp => true),
       catchError(error => of(false))
     );
   }
@@ -54,6 +64,21 @@ export class UsuarioService {
   crearUsuario(formData: RegisterForm) {
   
    return this.http.post(`${baseUrl}/usuarios`, formData);
+
+  }
+
+  actualizarPerfil(data: {email: string, nombre: string, role: string}) {
+
+    data = {
+      ...data,
+      role: this.usuario.role
+    }
+
+    return this.http.put(`${baseUrl}/usuarios/${this.uid}`, data, {
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      } 
+    });
 
   }
 
