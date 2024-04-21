@@ -17,3 +17,30 @@
     width: 200px;
     height: 200px;
 }
+
+.w100 {
+    width: 100px;
+}
+
+.w140 {
+    width: 140px;
+}
+
+.table-avatar {
+    width: 75px;
+    /* border-radius: 100%; */
+}
+
+.fondo-modal-imagen {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+}
+
+.oculto {
+    display: none;
+}
