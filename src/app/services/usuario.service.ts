@@ -1,11 +1,12 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, delay, map, Observable, of, tap } from 'rxjs';
+import { catchError, delay, map, Observable, of, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { Usuario } from '../models/usuario.model';
 import { RegisterForm } from '../interfaces/register-form.interface';
 import { CargarUsuario } from '../interfaces/cargar-usuarios.interface';
+import Swal from 'sweetalert2';
 
 const baseUrl = environment.base_url;
 
@@ -28,6 +29,10 @@ export class UsuarioService {
 
   get token() {
     return localStorage.getItem('token') || '';
+  }
+
+  get role(): string {
+    return this.usuario.role;
   }
 
   get uid() {
@@ -54,6 +59,11 @@ export class UsuarioService {
     })
   }
 
+  guardarLocalStorage(token: string, menu: any) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('menu', JSON.stringify(menu));
+  }
+
   validarToken(): Observable<boolean> {
     return this.http.get(`${baseUrl}/login/renew`, {
       headers: {
@@ -63,7 +73,7 @@ export class UsuarioService {
       map((resp: any)=> {
         const {email, nombre, google, role, _id, password, img = ''} = resp.usuario;
         this.usuario = new Usuario(nombre, email, password, role, img, google, _id);
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
         return true
       }),
       catchError(error => of(false))
@@ -72,7 +82,11 @@ export class UsuarioService {
 
   crearUsuario(formData: RegisterForm) {
   
-   return this.http.post(`${baseUrl}/usuarios`, formData);
+   return this.http.post(`${baseUrl}/usuarios`, formData)
+          .pipe(
+            tap((resp: any) => {
+              this.guardarLocalStorage(resp.token, resp.menu);
+            }));
 
   }
 
@@ -96,7 +110,7 @@ export class UsuarioService {
 
     return this.http.post(`${baseUrl}/login`, formData).pipe(
       tap((resp: any) =>  {
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
       })
     );
  
@@ -105,13 +119,14 @@ export class UsuarioService {
    loginGoogle(token: any) {
     return this.http.post(`${baseUrl}/login/google`, {token}).pipe(
       tap((resp: any) =>  {
-        localStorage.setItem('token', resp.token);
+        this.guardarLocalStorage(resp.token, resp.menu);
       })
     );
    }
 
    logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('menu');
     this.auth2.signOut().then(() => {
       this.ngZone.run(() => {
         this.router.navigateByUrl('login');

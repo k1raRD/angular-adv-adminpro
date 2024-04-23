@@ -4,6 +4,7 @@ import Swal from 'sweetalert2'
 
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { Router } from '@angular/router';
+import { throwError } from 'rxjs';
 
 /**
  * Clase componente para el registro de usuario.
@@ -52,6 +53,7 @@ export class RegisterComponent {
               text: err.error.msg,
               icon: 'error'
             })
+            return throwError(() => new Error(err));
           }
         });
   }
